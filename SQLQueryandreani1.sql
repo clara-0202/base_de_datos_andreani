@@ -186,56 +186,25 @@ SELECT DB_NAME() AS BaseActual;
 USE LogisticaTP;
 GO
 
-EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
-EXEC sp_MSforeachtable 'DROP TABLE ?';
+--EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
+--EXEC sp_MSforeachtable 'DROP TABLE ?';
 GO
 SELECT name 
 FROM sys.tables 
 ORDER BY name;
 
--- 6) Caja_Detalle (N:M Caja <-> Lote)
-CREATE TABLE Caja_Detalle (
-    id_caja INT NOT NULL,
-    id_lote INT NOT NULL,
-    cantidad_contenida INT NOT NULL CHECK (cantidad_contenida >= 0),
-    PRIMARY KEY (id_caja, id_lote),
-    CONSTRAINT FK_CajaDetalle_Caja FOREIGN KEY (id_caja) REFERENCES Caja(id_caja),
-    CONSTRAINT FK_CajaDetalle_Lote FOREIGN KEY (id_lote) REFERENCES Lote(id_lote)
-);
+INSERT INTO Cliente (nombre, direccion, tipo_cliente, cuit, contacto) VALUES
+('Farmacia Central', 'Av. Corrientes 1234, CABA', 'Farmacia', '30-12345678-9', 'María López'),
+('Hospital San Martín', 'Belgrano 555, La Plata', 'Hospital', '30-98765432-1', 'Dr. Gómez'),
+('Droguería Norte', 'Ruta 8 Km 45, Pilar', 'Droguería', '30-11122333-4', 'Carlos Ruiz'),
+('Hospital Italiano', 'Gascon 450, CABA', 'Hospital', '30-55566677-8', 'Lucía Méndez'),
+('Farmacia Belgrano', 'Juramento 2500, CABA', 'Farmacia', '30-44455566-7', 'Ana Torres'),
+('Hospital El Cruce', 'Av. Calchaquí 5400, Quilmes', 'Hospital', '30-22233344-5', 'Dr. Pereyra'),
+('Farmacia Mitre', 'Mitre 980, Morón', 'Farmacia', '30-10101010-1', 'Hernán Soto'),
+('Farmacia Salud', 'Av. San Martín 1200, Lanús', 'Farmacia', '30-22221111-9', 'Paula Álvarez'),
+('Clínica del Sol', 'Av. Rivadavia 7200, CABA', 'Clínica', '30-98989898-7', 'Dr. López'),
+('Droguería Sur', 'Ruta 205 Km 25, Ezeiza', 'Droguería', '30-87878787-3', 'Javier Díaz');
 
--- 7) Despacho_Caja
-CREATE TABLE Despacho_Caja (
-    id_despacho INT NOT NULL,
-    id_caja INT NOT NULL,
-    PRIMARY KEY (id_despacho, id_caja),
-    CONSTRAINT FK_DespachoCaja_Despacho FOREIGN KEY (id_despacho) REFERENCES Despacho(id_despacho),
-    CONSTRAINT FK_DespachoCaja_Caja FOREIGN KEY (id_caja) REFERENCES Caja(id_caja)
-);
-
--- 8) Entrega
-CREATE TABLE Entrega (
-    id_entrega INT IDENTITY(1,1) PRIMARY KEY,
-    id_despacho INT NOT NULL,
-    id_cliente INT NOT NULL,
-    fecha_entrega DATE NOT NULL,
-    hora TIME NULL,
-    temperatura_registrada VARCHAR(50) NULL,
-    conformidad VARCHAR(50) NULL,
-    CONSTRAINT FK_Entrega_Despacho FOREIGN KEY (id_despacho) REFERENCES Despacho(id_despacho),
-    CONSTRAINT FK_Entrega_Cliente FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente)
-);
-
--- 9) Incidencia
-CREATE TABLE Incidencia (
-    id_incidencia INT IDENTITY(1,1) PRIMARY KEY,
-    id_picking INT NULL,
-    id_despacho INT NULL,
-    tipo_incidencia VARCHAR(100) NULL,
-    descripcion VARCHAR(1000) NULL,
-    fecha_hora DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Incidencia_Picking FOREIGN KEY (id_picking) REFERENCES Picking(id_picking),
-    CONSTRAINT FK_Incidencia_Despacho FOREIGN KEY (id_despacho) REFERENCES Despacho(id_despacho)
-);
 
 
 INSERT INTO Estado_Pedido (nombre_estado, descripcion) VALUES
@@ -262,18 +231,9 @@ INSERT INTO Estado_Despacho (nombre_estado, descripcion) VALUES
 ('Confirmado','Aprobado para salida'),
 ('Demorado','Retrasado por logística');
 
-
-INSERT INTO Estado_Pedido (nombre_estado, descripcion) VALUES
-('Pendiente','Pedido recibido, sin procesar'),
-('En preparación','En proceso de preparación en almacén'),
-('En picking','Extracción en curso'),
-('Despachado','Pedido listo para envío'),
-('Entregado','Pedido entregado al cliente'),
-('Cancelado','Pedido anulado'),
-('Rechazado','Error de validación'),
-('Facturado','Con documentación completa'),
-('Aprobado','Aprobado por control de stock'),
-('En revisión','Pendiente de control de calidad');
+--INSER
+--EXEC sp_help 'Estado_Pedido'
+/*
 
 INSERT INTO Estado_Despacho (nombre_estado, descripcion) VALUES
 ('Planificado','Despacho programado'),
@@ -285,7 +245,7 @@ INSERT INTO Estado_Despacho (nombre_estado, descripcion) VALUES
 ('Cancelado','Anulado por control'),
 ('Validando','Esperando control'),
 ('Confirmado','Aprobado para salida'),
-('Demorado','Retrasado por logística');
+('Demorado','Retrasado por logística');*/
 
 INSERT INTO Producto (nombre, principio_activo, condicion_conservacion) VALUES
 ('Paracetamol 500mg', 'Paracetamol', 'Temperatura ambiente'),
@@ -365,6 +325,8 @@ INSERT INTO Picking (id_detalle_pedido, id_operario, resultado_validacion) VALUE
 (1,1,'OK'),(2,2,'OK'),(3,3,'OK'),(4,1,'OK'),(5,2,'OK'),
 (6,3,'OK'),(7,4,'PARCIAL'),(8,5,'OK'),(9,6,'OK'),(10,7,'ERROR');
 
+
+--SELECT * FROM sys.tables 
 INSERT INTO Picking_Detalle (id_picking, id_lote, cantidad_extraida) VALUES
 (1,1,80),(2,2,50),(3,3,60),(4,4,50),(5,5,40),
 (6,6,55),(7,7,40),(8,8,25),(9,9,10),(10,10,5);
@@ -380,18 +342,6 @@ INSERT INTO Caja (codigo_qr, codigo_barras, tipo_caja, peso_total, volumen) VALU
 ('QR008','CB008','Chica',6.0,0.2),
 ('QR009','CB009','Grande',14.0,0.4),
 ('QR010','CB010','Mediana',9.5,0.28);
-INSERT INTO Cliente (nombre, direccion, tipo_cliente, cuit, contacto) VALUES
-('Farmacia Central', 'Av. Corrientes 1234, CABA', 'Farmacia', '30-12345678-9', 'María López'),
-('Hospital San Martín', 'Belgrano 555, La Plata', 'Hospital', '30-98765432-1', 'Dr. Gómez'),
-('Droguería Norte', 'Ruta 8 Km 45, Pilar', 'Droguería', '30-11122333-4', 'Carlos Ruiz'),
-('Hospital Italiano', 'Gascon 450, CABA', 'Hospital', '30-55566677-8', 'Lucía Méndez'),
-('Farmacia Belgrano', 'Juramento 2500, CABA', 'Farmacia', '30-44455566-7', 'Ana Torres'),
-('Hospital El Cruce', 'Av. Calchaquí 5400, Quilmes', 'Hospital', '30-22233344-5', 'Dr. Pereyra'),
-('Farmacia Mitre', 'Mitre 980, Morón', 'Farmacia', '30-10101010-1', 'Hernán Soto'),
-('Farmacia Salud', 'Av. San Martín 1200, Lanús', 'Farmacia', '30-22221111-9', 'Paula Álvarez'),
-('Clínica del Sol', 'Av. Rivadavia 7200, CABA', 'Clínica', '30-98989898-7', 'Dr. López'),
-('Droguería Sur', 'Ruta 205 Km 25, Ezeiza', 'Droguería', '30-87878787-3', 'Javier Díaz');
-
 
 INSERT INTO Caja_Detalle (id_caja, id_lote, cantidad_contenida) VALUES
 (1,1,20),(2,2,30),(3,3,25),(4,4,15),(5,5,10),
@@ -446,79 +396,3 @@ JOIN sys.partitions p ON t.object_id = p.object_id
 WHERE p.index_id IN (0,1)
 GROUP BY t.name
 ORDER BY Tabla;
-
-
-SELECT * FROM Cliente;
-SELECT * FROM Producto;
-SELECT * FROM Lote;
-SELECT * FROM Pedido;
-SELECT * FROM Detalle_Pedido;
-SELECT * FROM Picking;
-SELECT * FROM Caja;
-SELECT * FROM Caja_Detalle;
-SELECT * FROM Despacho;
-SELECT * FROM Despacho_Caja;
-SELECT * FROM Entrega;
-SELECT * FROM Incidencia;
-SELECT * FROM Estado_Pedido;
-SELECT * FROM Estado_Despacho;
-SELECT * FROM Picking_Detalle;
-
-
-SELECT name 
-FROM sys.tables 
-WHERE name LIKE '%Picking%';
-
-CREATE TABLE Picking_Detalle (
-    id_picking_detalle INT IDENTITY(1,1) PRIMARY KEY,
-    id_picking INT NOT NULL,
-    id_lote INT NOT NULL,
-    cantidad_extraida INT NOT NULL CHECK (cantidad_extraida > 0),
-    CONSTRAINT FK_PickingDetalle_Picking FOREIGN KEY (id_picking) REFERENCES Picking(id_picking),
-    CONSTRAINT FK_PickingDetalle_Lote FOREIGN KEY (id_lote) REFERENCES Lote(id_lote)
-);
-GO
-
-SELECT name, create_date 
-FROM sys.tables 
-WHERE name = 'Picking';
-
-SELECT DB_NAME() AS Base_Actual;
-USE LogisticaTP;
-GO
-
-
-USE LogisticaTP;
-GO
-DROP TABLE IF EXISTS Picking;
-GO
-CREATE TABLE Picking (
-    id_picking INT IDENTITY(1,1) PRIMARY KEY,
-    id_detalle_pedido INT NOT NULL,
-    id_operario INT NOT NULL,
-    fecha_hora DATETIME NOT NULL DEFAULT GETDATE(),
-    resultado_validacion VARCHAR(100) NULL,
-    comentarios VARCHAR(500) NULL,
-    CONSTRAINT FK_Picking_DetallePedido FOREIGN KEY (id_detalle_pedido) REFERENCES Detalle_Pedido(id_detalle_pedido),
-    CONSTRAINT FK_Picking_Operario FOREIGN KEY (id_operario) REFERENCES Operario(id_operario)
-);
-GO
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
